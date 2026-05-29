@@ -198,22 +198,17 @@ def breadth_first_search(grid: Grid, start: Position, goal: Position, heuristic:
     cells.
     """
 
-    # Record start time for performance measurement
+    
     bfs_started = perf_counter()
 
-    # FIFO queue for BFS expansion; start node is enqueued first
     bfs_frontier: deque[Position] = deque([start])
 
-    # Dictionary to reconstruct the path (child -> parent)
     came_from: dict[Position, Position] = {}
 
-    # Track visited nodes to avoid revisiting; start is already explored
     visited: set[Position] = {start}
 
-    # Order in which nodes are popped from the queue (for analysis/visualization)
     visited_order: list[Position] = []
 
-    # Memory metric: maximum number of nodes that were ever in the queue
     frontier_max = 1
 
     while bfs_frontier:
