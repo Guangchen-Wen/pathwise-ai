@@ -122,50 +122,50 @@ def _finish(
 
 def weighted_search(grid: Grid, start: Position, goal: Position, algorithm: str, heuristic: str) -> SearchResult:
     """Run A*, Dijkstra, or Greedy Best-First Search on a weighted grid."""
+# Record start time to calculate how long the search takes
+    started_at = perf_counter()  # Record start time
+    frontier: list[tuple[float, int, Position]] = []  # Nodes to explore
+    unique = count()  # Unique id for heap sorting
+    came_from: dict[Position, Position] = {}  # Record path
+    cost_so_far: dict[Position, int] = {start: 0}  # Travel cost so far
+    visited: set[Position] = set()  # Visited nodes
+    visited_order: list[Position] = []  # Visit sequence
+    frontier_max = 1  # Max queue size
 
-    started_at = perf_counter()
-    frontier: list[tuple[float, int, Position]] = []
-    unique = count()
-    came_from: dict[Position, Position] = {}
-    cost_so_far: dict[Position, int] = {start: 0}
-    visited: set[Position] = set()
-    visited_order: list[Position] = []
-    frontier_max = 1
+    heappush(frontier, (0, next(unique), start))  # Add start node
 
-    heappush(frontier, (0, next(unique), start))
+    while frontier:  # Explore nodes in loop
+        frontier_max = max(frontier_max, len(frontier))  # Update max size
+        _, _, current = heappop(frontier)  # Get highest priority node
 
-    while frontier:
-        frontier_max = max(frontier_max, len(frontier))
-        _, _, current = heappop(frontier)
-
-        if current in visited:
+        if current in visited:  # Skip processed nodes
             continue
 
-        visited.add(current)
-        visited_order.append(current)
+        visited.add(current)  # Mark as visited
+        visited_order.append(current)  # Save order
 
-        if current == goal:
+        if current == goal:  # Reach destination
             return _finish(algorithm, heuristic, grid, start, goal, came_from, visited_order, frontier_max, started_at)
 
-        for neighbor in neighbors(grid, current):
-            step_cost = terrain_cost(grid, neighbor)
-            if step_cost is None:
+        for neighbor in neighbors(grid, current):  # Check all neighbors
+            step_cost = terrain_cost(grid, neighbor)  # Cost of current terrain
+            if step_cost is None:  # Skip blocked cells
                 continue
 
-            new_cost = cost_so_far[current] + step_cost
-            if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
-                cost_so_far[neighbor] = new_cost
-                came_from[neighbor] = current
-                h_value = heuristic_distance(heuristic, neighbor, goal)
+            new_cost = cost_so_far[current] + step_cost  # New travel cost
+            if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:  # Found better path
+                cost_so_far[neighbor] = new_cost  # Update cost
+                came_from[neighbor] = current  # Record path
+                h_value = heuristic_distance(heuristic, neighbor, goal)  # Heuristic value
 
                 if algorithm == "Dijkstra":
-                    priority = new_cost
+                    priority = new_cost  # Priority = travel cost
                 elif algorithm == "Greedy Best-First":
-                    priority = h_value
+                    priority = h_value  # Priority = heuristic
                 else:
-                    priority = new_cost + h_value
+                    priority = new_cost + h_value  # Priority = cost + heuristic
 
-                heappush(frontier, (priority, next(unique), neighbor))
+                heappush(frontier, (priority, next(unique), neighbor))  # Add to queue
 
     return _finish(
         algorithm,
@@ -178,7 +178,7 @@ def weighted_search(grid: Grid, start: Position, goal: Position, algorithm: str,
         frontier_max,
         started_at,
         "No path found",
-    )
+    )  # No available path
 
 
 def breadth_first_search(grid: Grid, start: Position, goal: Position, heuristic: str = "None") -> SearchResult:
