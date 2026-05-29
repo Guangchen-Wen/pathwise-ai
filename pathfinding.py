@@ -198,16 +198,16 @@ def breadth_first_search(grid: Grid, start: Position, goal: Position, heuristic:
     cells.
     """
 
-    started_at = perf_counter()
-    frontier: deque[Position] = deque([start])
+    bfs_started = perf_counter()
+    bfs_frontier: deque[Position] = deque([start])
     came_from: dict[Position, Position] = {}
     visited: set[Position] = {start}
     visited_order: list[Position] = []
     frontier_max = 1
 
-    while frontier:
-        frontier_max = max(frontier_max, len(frontier))
-        current = frontier.popleft()
+    while bfs_frontier:
+        frontier_max = max(frontier_max, len(bfs_frontier))
+        current = bfs_frontier.popleft()
         visited_order.append(current)
 
         if current == goal:
@@ -220,7 +220,7 @@ def breadth_first_search(grid: Grid, start: Position, goal: Position, heuristic:
                 came_from,
                 visited_order,
                 frontier_max,
-                started_at,
+                bfs_started,
                 "BFS ignores terrain weights",
             )
         else:
@@ -240,7 +240,7 @@ def breadth_first_search(grid: Grid, start: Position, goal: Position, heuristic:
         came_from,
         visited_order,
         frontier_max,
-        started_at,
+        bfs_started,
         "No path found",
     )
 
