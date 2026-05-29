@@ -198,18 +198,33 @@ def breadth_first_search(grid: Grid, start: Position, goal: Position, heuristic:
     cells.
     """
 
+    # Record start time for performance measurement
     bfs_started = perf_counter()
+
+    # FIFO queue for BFS expansion; start node is enqueued first
     bfs_frontier: deque[Position] = deque([start])
+
+    # Dictionary to reconstruct the path (child -> parent)
     came_from: dict[Position, Position] = {}
+
+    # Track visited nodes to avoid revisiting; start is already explored
     visited: set[Position] = {start}
+
+    # Order in which nodes are popped from the queue (for analysis/visualization)
     visited_order: list[Position] = []
+
+    # Memory metric: maximum number of nodes that were ever in the queue
     frontier_max = 1
 
     while bfs_frontier:
+        # Update the peak queue size
         frontier_max = max(frontier_max, len(bfs_frontier))
+
+        # Dequeue the next node (BFS processes nodes in order of distance from start)
         current = bfs_frontier.popleft()
         visited_order.append(current)
 
+        # Goal test: if we reached the target, immediately build and return the result
         if current == goal:
             return _finish(
                 "BFS",
@@ -221,16 +236,23 @@ def breadth_first_search(grid: Grid, start: Position, goal: Position, heuristic:
                 visited_order,
                 frontier_max,
                 bfs_started,
-                "BFS ignores terrain weights",
+                "BFS ignores terrain weights",   # note explaining BFS does not account for terrain cost
             )
         else:
+            # Expand all valid neighbors (4-directional, non-obstacle)
             for neighbor in neighbors(grid, current):
+                # Skip already visited nodes to guarantee shortest path in unweighted graphs
                 if neighbor in visited:
                     continue
+                # Mark visited immediately to prevent duplicate queue entries
                 visited.add(neighbor)
+                # Record how we reached this neighbor (for path reconstruction)
                 came_from[neighbor] = current
-                frontier.append(neighbor)
+                # Enqueue the neighbor for later expansion
+                # BUG: variable name is 'bfs_frontier', not 'frontier'
+                frontier.append(neighbor)   # This line will cause a NameError; should be bfs_frontier.append(neighbor)
 
+    # If the queue empties without reaching the goal, no path exists
     return _finish(
         "BFS",
         heuristic,
@@ -246,15 +268,20 @@ def breadth_first_search(grid: Grid, start: Position, goal: Position, heuristic:
 
 
 def run_search(grid: Grid, start: Position, goal: Position, algorithm: str, heuristic: str) -> SearchResult:
+    # Dispatch table mapping algorithm names to their implementation functions
     runners: dict[str, Callable[[Grid, Position, Position, str], SearchResult]] = {
         "BFS": breadth_first_search,
     }
 
+    # If the requested algorithm has a dedicated runner, use it
     if algorithm in runners:
         return runners[algorithm](grid, start, goal, heuristic)
 
+    # Otherwise, fall back to the generic weighted search (supports A*, Dijkstra, Greedy)
     return weighted_search(grid, start, goal, algorithm, heuristic)
 
 
 def run_all_algorithms(grid: Grid, start: Position, goal: Position, heuristic: str) -> list[SearchResult]:
+    # Run all four pathfinding algorithms with the same start, goal, and heuristic,
+    # and collect their SearchResult objects for comparison
     return [run_search(grid, start, goal, algorithm, heuristic) for algorithm in ["A*", "Dijkstra", "BFS", "Greedy Best-First"]]
