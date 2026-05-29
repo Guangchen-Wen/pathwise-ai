@@ -47,7 +47,7 @@ def terrain_cost(grid: Grid, position: Position) -> int | None:
     row, col = position
     return TERRAIN_COSTS.get(grid[row][col], 1)
 
-
+# checking if the searching coordinate out of the map
 def in_bounds(grid: Grid, position: Position) -> bool:
     row, col = position
     return 0 <= row < len(grid) and 0 <= col < len(grid[0])
@@ -76,7 +76,7 @@ def calculate_path_cost(grid: Grid, path: list[Position]) -> int:
     if not path:
         return 0
 
-    # The cost of a path is the cost paid when entering each next cell.
+    # We start from 1,not 0, in order to exclude the beginning point
     return sum(terrain_cost(grid, pos) or 0 for pos in path[1:])
 
 
