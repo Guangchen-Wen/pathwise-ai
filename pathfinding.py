@@ -81,14 +81,20 @@ def calculate_path_cost(grid: Grid, path: list[Position]) -> int:
 
 
 def heuristic_distance(name: str, current: Position, goal: Position) -> float:
-    row_delta = abs(current[0] - goal[0])
-    col_delta = abs(current[1] - goal[1])
+    """find the distance between current position and goal distance firstly
+    
+    than return a value based on the judgment of the name"""
+    
+    row_diatance = abs(current[0] - goal[0])
+    
+    col_distance = abs(current[1] - goal[1])
 
     if name == "Euclidean":
-        return sqrt(row_delta * row_delta + col_delta * col_delta)
+        return sqrt(row_distance ** 2 + col_distance ** 2)
     if name == "Chebyshev":
-        return max(row_delta, col_delta)
-    return row_delta + col_delta
+        return max(row_distance, col_distance)
+        
+    return row_distanace + col_distance
 
 
 def _finish(
