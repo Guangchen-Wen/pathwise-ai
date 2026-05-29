@@ -240,14 +240,20 @@ class PathWiseApp(tk.Tk):
         if draw:
             self.draw_grid()
 
+# generate the map randomly
     def random_map(self) -> None:
         self.stop_animation()
         for row in range(self.rows.get()):
             for col in range(self.cols.get()):
                 pos = (row, col)
+                
+                # in order to prevent that the beginning point and ending point covered by scanning, we should remove it 
                 if pos in [self.start, self.goal]:
                     continue
+
+                # introduce uniform distribution to randomly generate new map
                 roll = random.random()
+                # we distribute different kinds of lands by graudually increasing the value of "roll"
                 if roll < 0.18:
                     self.grid_data[row][col] = "wall"
                 elif roll < 0.28:
