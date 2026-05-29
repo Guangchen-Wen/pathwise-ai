@@ -210,14 +210,7 @@ class PathWiseApp(tk.Tk):
             self.compare_table.heading(column, text=headings[column])
             self.compare_table.column(column, width=widths[column], anchor="center")
         self.compare_table.pack(fill="x", padx=12, pady=(4, 0))
-    #Team Roles Section
-        self._section_label(parent, "Team Roles")
-        roles_box = tk.Text(parent, width=34, height=12, bg="#0f172a", fg="#e5e7eb", bd=0, font=("Segoe UI", 9), wrap="word")
-        roles_box.pack(fill="both", expand=True, padx=12, pady=(4, 12))
-        for name, role in TEAM_ROLES:
-            roles_box.insert("end", f"{name}\n  {role}\n\n")
-        roles_box.configure(state="disabled")
-
+        
     def reset_grid(self) -> None:
         self.stop_animation()
         rows = max(8, min(45, self.rows.get()))
