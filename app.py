@@ -66,6 +66,8 @@ class PathWiseApp(tk.Tk):
         self._build_styles()
         self._build_layout()
         self.reset_grid()
+        self.option_add('*TCombobox*Listbox.background', '#0f172a')
+        self.option_add('*TCombobox*Listbox.foreground', '#ffffff')
 
     def _build_styles(self) -> None:
         style = ttk.Style(self)
@@ -79,11 +81,14 @@ class PathWiseApp(tk.Tk):
         style.configure("TButton", font=("Segoe UI", 10), padding=7)
         style.configure("TRadiobutton", background="#111827", foreground="#e5e7eb", font=("Segoe UI", 9))
         style.configure("TCheckbutton", background="#111827", foreground="#e5e7eb")
-        style.configure("TCombobox", fieldbackground="#0f172a", background="#0f172a", foreground="#e5e7eb")
+        style.configure("TCombobox", fieldbackground="#050816", background="#1e293b", foreground="#ffffff",padding=5)
+        style.map("TCombobox",fieldbackground=[("readonly", "#0f172a")],selectbackground=[("readonly", "#1e293b")],
+                  selectforeground=[("readonly", "#ffffff")])
         style.configure("Treeview", background="#0f172a", fieldbackground="#0f172a", foreground="#e5e7eb", rowheight=25)
         style.configure("Treeview.Heading", background="#1e293b", foreground="#f8fafc", font=("Segoe UI", 9, "bold"))
 
     def _build_layout(self) -> None:
+        #Set up the top header area to hold the title and subtitle
         header = ttk.Frame(self, style="TFrame")
         header.pack(fill="x", padx=18, pady=(14, 8))
         ttk.Label(header, text="PathWise AI", style="Title.TLabel").pack(side="left")
@@ -94,39 +99,48 @@ class PathWiseApp(tk.Tk):
             foreground="#94a3b8",
             font=("Segoe UI", 10),
         ).pack(side="left", padx=18)
-
+        
+        #Make the main body container for our 3-column setup
         body = ttk.Frame(self, style="TFrame")
         body.pack(fill="both", expand=True, padx=18, pady=(0, 18))
-
+        
+        #Left panel: This is where we put all the user controls like grid size and tools
         left_panel = ttk.Frame(body, style="Panel.TFrame")
         left_panel.pack(side="left", fill="y", padx=(0, 12))
         self._build_controls(left_panel)
-
+        
+        #Center panel: This holds the actual grid canvas you click on
         center = ttk.Frame(body, style="TFrame")
         center.pack(side="left", fill="both", expand=True)
-
+        
+        #Just a wrapper for the canvas so we can give it a nice border
         canvas_shell = tk.Frame(center, bg="#0b1020", bd=0, highlightthickness=1, highlightbackground="#1f2a44")
         canvas_shell.pack(fill="both", expand=True)
-
+        
+        #The main canvas where all the drawing happens
         self.canvas = tk.Canvas(canvas_shell, bg="#0b1020", highlightthickness=0)
         self.canvas.pack(fill="both", expand=True, padx=8, pady=8)
+        #Listen for mouse clicks, drags, and window resizing so the grid updates automatically
         self.canvas.bind("<Button-1>", self.on_canvas_click)
         self.canvas.bind("<B1-Motion>", self.on_canvas_drag)
         self.canvas.bind("<Configure>", lambda _event: self.draw_grid())
-
+        
+        #Right panel: This shows the search results and stats (zixi0427feng-source handles this part)
         right_panel = ttk.Frame(body, style="Panel.TFrame")
         right_panel.pack(side="right", fill="y", padx=(12, 0))
         self._build_results(right_panel)
 
     def _section_label(self, parent: ttk.Frame, text: str) -> None:
+        #A quick helper function so all our side panel headers look the same
         ttk.Label(parent, text=text, font=("Segoe UI", 11, "bold"), background="#111827", foreground="#f8fafc").pack(
             anchor="w", padx=12, pady=(14, 6)
         )
 
     def _build_controls(self, parent: ttk.Frame) -> None:
         parent.configure(width=250)
-        parent.pack_propagate(False)
-
+        parent.pack_propagate(False) #Stop the stuff inside from stretching or squishing the panel
+        
+        #Grid Size settings
         self._section_label(parent, "Grid Size")
         size_frame = ttk.Frame(parent, style="Panel.TFrame")
         size_frame.pack(fill="x", padx=12)
@@ -135,7 +149,8 @@ class PathWiseApp(tk.Tk):
         ttk.Label(size_frame, text="Columns").grid(row=1, column=0, sticky="w")
         ttk.Spinbox(size_frame, from_=8, to=65, textvariable=self.cols, width=8).grid(row=1, column=1, padx=8, pady=3)
         ttk.Button(parent, text="Apply Grid Size", command=self.reset_grid).pack(fill="x", padx=12, pady=(8, 0))
-
+        
+        #Grid Editing Tools
         self._section_label(parent, "Edit Tool")
         tools = [
             ("Start", "start"),
@@ -146,18 +161,20 @@ class PathWiseApp(tk.Tk):
             ("Water cost 5", "water"),
             ("Mountain cost 8", "mountain"),
         ]
+        #Loop through the tools and make a radio button for each one
         for text, value in tools:
             ttk.Radiobutton(parent, text=text, value=value, variable=self.selected_tool).pack(anchor="w", padx=14, pady=1)
-
+        #Color legend so users know what the terrain colors mean
         legend = ttk.Frame(parent, style="Panel.TFrame")
         legend.pack(fill="x", padx=12, pady=(8, 0))
         for index, terrain in enumerate(["normal", "grass", "water", "mountain", "wall"]):
+            #Make a little colored square for the legend
             swatch = tk.Label(legend, width=2, height=1, bg=TERRAIN_COLORS[terrain])
             swatch.grid(row=index, column=0, sticky="w", pady=2)
             cost = TERRAIN_COSTS[terrain]
             label = "blocked" if cost is None else f"cost {cost}"
             ttk.Label(legend, text=f"{terrain.title()} - {label}").grid(row=index, column=1, sticky="w", padx=7)
-
+        #Algorithm selection drop-downs
         self._section_label(parent, "Algorithm")
         ttk.Combobox(
             parent,
@@ -171,10 +188,11 @@ class PathWiseApp(tk.Tk):
             state="readonly",
             values=["Manhattan", "Euclidean", "Chebyshev"],
         ).pack(fill="x", padx=12, pady=(8, 0))
-
+        #Slider for animation speed
         ttk.Label(parent, text="Animation Speed", style="Muted.TLabel").pack(anchor="w", padx=12, pady=(10, 0))
         ttk.Scale(parent, from_=1, to=30, variable=self.speed, orient="horizontal").pack(fill="x", padx=12)
-
+        
+        #The main action buttons
         buttons = ttk.Frame(parent, style="Panel.TFrame")
         buttons.pack(fill="x", padx=12, pady=(12, 0))
         ttk.Button(buttons, text="Run Search", command=self.run_selected).pack(fill="x", pady=3)
@@ -204,18 +222,11 @@ class PathWiseApp(tk.Tk):
             "visited": "Visited",
             "time": "ms",
         }
-        widths = {"algorithm": 112, "cost": 48, "length": 48, "visited": 58, "time": 58}
+        widths = {"algorithm": 98, "cost": 44, "length": 48, "visited": 56, "time": 54}
         for column in columns:
             self.compare_table.heading(column, text=headings[column])
             self.compare_table.column(column, width=widths[column], anchor="center")
         self.compare_table.pack(fill="x", padx=12, pady=(4, 0))
-
-        self._section_label(parent, "Team Roles")
-        roles_box = tk.Text(parent, width=34, height=12, bg="#0f172a", fg="#e5e7eb", bd=0, font=("Segoe UI", 9), wrap="word")
-        roles_box.pack(fill="both", expand=True, padx=12, pady=(4, 12))
-        for name, role in TEAM_ROLES:
-            roles_box.insert("end", f"{name}\n  {role}\n\n")
-        roles_box.configure(state="disabled")
 
     def reset_grid(self) -> None:
         self.stop_animation()
@@ -261,21 +272,27 @@ class PathWiseApp(tk.Tk):
         self.draw_grid()
 
     def on_canvas_click(self, event: tk.Event) -> None:
+        #This runs whenever you left-click on the canvas
         self.apply_tool_at(event.x, event.y)
 
     def on_canvas_drag(self, event: tk.Event) -> None:
+        #This runs when you click and drag. 
+        #Skipping 'start' and 'goal' so you don't accidentally draw a whole line of them.
         if self.selected_tool.get() not in {"start", "goal"}:
             self.apply_tool_at(event.x, event.y)
 
     def apply_tool_at(self, x: int, y: int) -> None:
+        #Figure out which grid cell is clicked based on the mouse's pixel position
         position = self.position_from_xy(x, y)
         if position is None:
-            return
-
+            return #If clicking is outside the grid, just bail out
+            
+        #Wipe out any old path lines if we edit the map
         self.clear_search(draw=False)
         tool = self.selected_tool.get()
         row, col = position
-
+        
+        #Special rules for placing the Start and Goal points
         if tool == "start":
             if position != self.goal:
                 self.start = position
@@ -284,36 +301,44 @@ class PathWiseApp(tk.Tk):
             if position != self.start:
                 self.goal = position
                 self.grid_data[row][col] = "normal"
+        #For everything else, like walls and grass
         elif position not in [self.start, self.goal]:
             self.grid_data[row][col] = tool
-
+        #Redraw the grid to show the new changes
         self.draw_grid()
 
     def position_from_xy(self, x: int, y: int) -> tuple[int, int] | None:
+        #Calculate the cell size and gaps to find the right row and column
         total_cell = self.cell_size + self.cell_gap
         col = x // total_cell
         row = y // total_cell
+        #Make sure the row and column actually exist on the grid
         if 0 <= row < self.rows.get() and 0 <= col < self.cols.get():
             return int(row), int(col)
         return None
 
     def draw_grid(self) -> None:
+        #Wipe the canvas clean before redrawing
         self.canvas.delete("all")
         rows, cols = self.rows.get(), self.cols.get()
+        #Find out how much space we have, minus a little padding
         available_w = max(1, self.canvas.winfo_width() - 16)
         available_h = max(1, self.canvas.winfo_height() - 16)
         self.cell_size = max(7, min(24, (available_w // cols) - self.cell_gap, (available_h // rows) - self.cell_gap))
         total_cell = self.cell_size + self.cell_gap
-
+        
+        #Go through every single cell in our data and draw it
         for row in range(rows):
             for col in range(cols):
+                #Find the top-left and bottom-right corners for the rectangle
                 x1 = col * total_cell + 4
                 y1 = row * total_cell + 4
                 x2 = x1 + self.cell_size
                 y2 = y1 + self.cell_size
                 pos = (row, col)
                 color = TERRAIN_COLORS[self.grid_data[row][col]]
-
+                
+                #Change the color if it's the start, goal, or part of the found path
                 if pos in self.visited_display:
                     color = STATE_COLORS["visited"]
                 if pos in self.path_display:
@@ -324,7 +349,7 @@ class PathWiseApp(tk.Tk):
                     color = STATE_COLORS["goal"]
 
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="#18233a", width=1)
-
+                #Draw the cost number on top of rough terrain, unless a path is already covering it
                 if self.grid_data[row][col] in {"grass", "water", "mountain"} and pos not in self.path_display:
                     self.canvas.create_text(
                         (x1 + x2) / 2,
