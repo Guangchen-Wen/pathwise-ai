@@ -84,7 +84,7 @@ class PathWiseApp(tk.Tk):
         style.configure("Treeview", background="#0f172a", fieldbackground="#0f172a", foreground="#e5e7eb", rowheight=25)
         style.configure("Treeview.Heading", background="#1e293b", foreground="#f8fafc", font=("Segoe UI", 9, "bold"))
 
-    def _build_layout(self) -> None:
+        def _build_layout(self) -> None:
         header = ttk.Frame(self, style="TFrame")
         header.pack(fill="x", padx=18, pady=(14, 8))
         ttk.Label(header, text="PathWise AI", style="Title.TLabel").pack(side="left")
@@ -95,6 +95,8 @@ class PathWiseApp(tk.Tk):
             foreground="#94a3b8",
             font=("Segoe UI", 10),
         ).pack(side="left", padx=18)
+        self.toggle_btn = ttk.Button(header, text="Hide Results ➔", command=self.toggle_right_panel)
+        self.toggle_btn.pack(side="right")
 
         body = ttk.Frame(self, style="TFrame")
         body.pack(fill="both", expand=True, padx=18, pady=(0, 18))
@@ -114,10 +116,12 @@ class PathWiseApp(tk.Tk):
         self.canvas.bind("<Button-1>", self.on_canvas_click)
         self.canvas.bind("<B1-Motion>", self.on_canvas_drag)
         self.canvas.bind("<Configure>", lambda _event: self.draw_grid())
+        
+        self.right_panel = ttk.Frame(body, style="Panel.TFrame")
+        self.right_panel.pack(side="right", fill="y", padx=(12, 0))
+        self._build_results(self.right_panel)
 
-        right_panel = ttk.Frame(body, style="Panel.TFrame")
-        right_panel.pack(side="right", fill="y", padx=(12, 0))
-        self._build_results(right_panel)
+        self.right_panel_visible = True
 
     def _section_label(self, parent: ttk.Frame, text: str) -> None:
         ttk.Label(parent, text=text, font=("Segoe UI", 11, "bold"), background="#111827", foreground="#f8fafc").pack(
@@ -213,6 +217,17 @@ class PathWiseApp(tk.Tk):
             self.compare_table.heading(column, text=headings[column])
             self.compare_table.column(column, width=widths[column], anchor="center")
         self.compare_table.pack(fill="x", padx=12, pady=(4, 0))
+
+    def toggle_right_panel(self) -> None:
+        if self.right_panel_visible:
+            self.right_panel.pack_forget()
+            self.toggle_btn.configure(text="⬅ Show Results")
+            self.right_panel_visible = False
+        else:
+            self.right_panel.pack(side="right", fill="y", padx=(12, 0))
+            self.toggle_btn.configure(text="Hide Results ➔")
+            self.right_panel_visible = True
+        self.after(20, self.draw_grid)
         
     def reset_grid(self) -> None:
         self.stop_animation()
