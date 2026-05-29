@@ -24,7 +24,7 @@ TERRAIN_COLORS = {
 STATE_COLORS = {
     "visited": "#7c3aed",
     "path": "#ffd60a",
-    "start": "#10b981",
+    "start": "#ffffff",
     "goal": "#f43f5e",
 }
 
@@ -77,7 +77,8 @@ class PathWiseApp(tk.Tk):
         style.configure("Muted.TLabel", background="#111827", foreground="#94a3b8", font=("Segoe UI", 9))
         style.configure("Stat.TLabel", background="#111827", foreground="#facc15", font=("Segoe UI", 13, "bold"))
         style.configure("TButton", font=("Segoe UI", 10), padding=7)
-        style.configure("TRadiobutton", background="#111827", foreground="#e5e7eb", font=("Segoe UI", 9))
+        style.configure("TRadiobutton",background="#111827",foreground="#e5e7eb",font=("Segoe UI", 9),indicatorsize=12,padding=3)
+        style.map("TRadiobutton",indicatorcolor=[('selected', '#38bdf8'), ('!selected', '#1e293b')],background=[('active', '#111827')])
         style.configure("TCheckbutton", background="#111827", foreground="#e5e7eb")
         style.configure("TCombobox", fieldbackground="#0f172a", background="#0f172a", foreground="#e5e7eb")
         style.configure("Treeview", background="#0f172a", fieldbackground="#0f172a", foreground="#e5e7eb", rowheight=25)
@@ -136,28 +137,30 @@ class PathWiseApp(tk.Tk):
         ttk.Spinbox(size_frame, from_=8, to=65, textvariable=self.cols, width=8).grid(row=1, column=1, padx=8, pady=3)
         ttk.Button(parent, text="Apply Grid Size", command=self.reset_grid).pack(fill="x", padx=12, pady=(8, 0))
 
-        self._section_label(parent, "Edit Tool")
-        tools = [
-            ("Start", "start"),
-            ("Goal", "goal"),
-            ("Wall", "wall"),
-            ("Normal cost 1", "normal"),
-            ("Grass cost 3", "grass"),
-            ("Water cost 5", "water"),
-            ("Mountain cost 8", "mountain"),
+        self._section_label(parent, "Edit Tools & Legend")
+        tool_frame = ttk.Frame(parent, style="Panel.TFrame")
+        tool_frame.pack(fill="x", padx=12, pady=(0, 8))
+
+        tools_info = [
+            ("start", "Start Point", STATE_COLORS["start"]),
+            ("goal", "Goal Point", STATE_COLORS["goal"]),
+            ("normal", "Normal - cost 1", TERRAIN_COLORS["normal"]),
+            ("grass", "Grass - cost 3", TERRAIN_COLORS["grass"]),
+            ("water", "Water - cost 5", TERRAIN_COLORS["water"]),
+            ("mountain", "Mountain - cost 8", TERRAIN_COLORS["mountain"]),
+            ("wall", "Wall - blocked", TERRAIN_COLORS["wall"]),
         ]
-        for text, value in tools:
-            ttk.Radiobutton(parent, text=text, value=value, variable=self.selected_tool).pack(anchor="w", padx=14, pady=1)
 
-        legend = ttk.Frame(parent, style="Panel.TFrame")
-        legend.pack(fill="x", padx=12, pady=(8, 0))
-        for index, terrain in enumerate(["normal", "grass", "water", "mountain", "wall"]):
-            swatch = tk.Label(legend, width=2, height=1, bg=TERRAIN_COLORS[terrain])
-            swatch.grid(row=index, column=0, sticky="w", pady=2)
-            cost = TERRAIN_COSTS[terrain]
-            label = "blocked" if cost is None else f"cost {cost}"
-            ttk.Label(legend, text=f"{terrain.title()} - {label}").grid(row=index, column=1, sticky="w", padx=7)
-
+        for i, (val, text, color) in enumerate(tools_info):
+            swatch = tk.Label(tool_frame, width=2, height=1, bg=color, bd=0)
+            swatch.grid(row=i, column=0, pady=4, padx=(0, 10), sticky="w")
+            ttk.Radiobutton(
+                tool_frame,
+                text=text,
+                value=val,
+                variable=self.selected_tool
+            ).grid(row=i, column=1, sticky="w")
+            
         self._section_label(parent, "Algorithm")
         ttk.Combobox(
             parent,
