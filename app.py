@@ -184,16 +184,17 @@ class PathWiseApp(tk.Tk):
         ttk.Button(buttons, text="Clear All", command=self.reset_grid).pack(fill="x", pady=3)
 
     def _build_results(self, parent: ttk.Frame) -> None:
+    #Panel Layout Configuration
         parent.configure(width=330)
         parent.pack_propagate(False)
-
+    #Current Result Section
         self._section_label(parent, "Current Result")
         self.status_label = ttk.Label(parent, text="Ready", style="Stat.TLabel")
         self.status_label.pack(anchor="w", padx=12)
         self.stats_text = tk.Text(parent, width=34, height=8, bg="#0f172a", fg="#e5e7eb", bd=0, font=("Consolas", 10))
         self.stats_text.pack(fill="x", padx=12, pady=(8, 0))
         self.stats_text.configure(state="disabled")
-
+    # Data Table
         self._section_label(parent, "Algorithm Comparison")
         columns = ("algorithm", "cost", "length", "visited", "time")
         self.compare_table = ttk.Treeview(parent, columns=columns, show="headings", height=6)
@@ -209,7 +210,7 @@ class PathWiseApp(tk.Tk):
             self.compare_table.heading(column, text=headings[column])
             self.compare_table.column(column, width=widths[column], anchor="center")
         self.compare_table.pack(fill="x", padx=12, pady=(4, 0))
-
+    #Team Roles Section
         self._section_label(parent, "Team Roles")
         roles_box = tk.Text(parent, width=34, height=12, bg="#0f172a", fg="#e5e7eb", bd=0, font=("Segoe UI", 9), wrap="word")
         roles_box.pack(fill="both", expand=True, padx=12, pady=(4, 12))
@@ -298,13 +299,13 @@ class PathWiseApp(tk.Tk):
         return None
 
     def draw_grid(self) -> None:
-        self.canvas.delete("all")
+        self.canvas.delete("all")           #Clear the canvas
         rows, cols = self.rows.get(), self.cols.get()
         available_w = max(1, self.canvas.winfo_width() - 16)
         available_h = max(1, self.canvas.winfo_height() - 16)
         self.cell_size = max(7, min(24, (available_w // cols) - self.cell_gap, (available_h // rows) - self.cell_gap))
         total_cell = self.cell_size + self.cell_gap
-
+    #Double loop to draw every single cell on the grid
         for row in range(rows):
             for col in range(cols):
                 x1 = col * total_cell + 4
@@ -324,7 +325,7 @@ class PathWiseApp(tk.Tk):
                     color = STATE_COLORS["goal"]
 
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="#18233a", width=1)
-
+            #Draw the terrain movement cost number if the cell size is large enough
                 if self.grid_data[row][col] in {"grass", "water", "mountain"} and pos not in self.path_display:
                     self.canvas.create_text(
                         (x1 + x2) / 2,
@@ -346,7 +347,7 @@ class PathWiseApp(tk.Tk):
         self.stop_animation()
         for item in self.compare_table.get_children():
             self.compare_table.delete(item)
-
+    #Run all algorithms simultaneously for benchmarking
         results = run_all_algorithms(self.grid_data, self.start, self.goal, self.heuristic.get())
         for result in results:
             self.compare_table.insert(
@@ -360,7 +361,7 @@ class PathWiseApp(tk.Tk):
                     f"{result.runtime_ms:.2f}",
                 ),
             )
-
+    #Pick the algorithm with the lowest cost and least nodes visited
         best = min((result for result in results if result.found), key=lambda item: (item.total_cost, item.explored_nodes), default=None)
         if best:
             self.last_result = best
@@ -375,7 +376,7 @@ class PathWiseApp(tk.Tk):
         self.visited_display.clear()
         self.path_display.clear()
         delay = max(5, int(220 / self.speed.get()))
-
+    #Animate the node exploration step-by-step
         def show_visited(index: int = 0) -> None:
             if index < len(result.visited_order):
                 self.visited_display.add(result.visited_order[index])
@@ -383,7 +384,7 @@ class PathWiseApp(tk.Tk):
                 self.animation_job = self.after(delay, lambda: show_visited(index + 1))
                 return
             show_path(0)
-
+    #Trace out the final optimal path back to the start
         def show_path(index: int = 0) -> None:
             if index < len(result.path):
                 self.path_display.add(result.path[index])
@@ -392,7 +393,7 @@ class PathWiseApp(tk.Tk):
                 return
             self.animation_job = None
 
-        show_visited()
+        show_visited()  #Kick off animation loops
 
     def stop_animation(self) -> None:
         if self.animation_job:
