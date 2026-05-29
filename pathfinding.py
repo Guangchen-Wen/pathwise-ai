@@ -191,13 +191,6 @@ def weighted_search(grid: Grid, start: Position, goal: Position, algorithm: str,
 
 
 def breadth_first_search(grid: Grid, start: Position, goal: Position, heuristic: str = "None") -> SearchResult:
-    """Run BFS as an unweighted baseline.
-
-    BFS minimizes number of steps, not weighted terrain cost. This makes it a
-    useful comparison algorithm when the map contains grass, water, or mountain
-    cells.
-    """
-
     
     bfs_started = perf_counter()
 
