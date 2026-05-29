@@ -128,41 +128,41 @@ def _finish(
 
 def weighted_search(grid: Grid, start: Position, goal: Position, algorithm: str, heuristic: str) -> SearchResult:
     """Run A*, Dijkstra, or Greedy Best-First Search on a weighted grid."""
-# Record start time to calculate how long the search takes
     started_at = perf_counter()  # Record start time
     frontier: list[tuple[float, int, Position]] = []  # Nodes to explore
     unique = count()  # Unique id for heap sorting
     came_from: dict[Position, Position] = {}  # Record path
     cost_so_far: dict[Position, int] = {start: 0}  # Travel cost so far
     visited: set[Position] = set()  # Visited nodes
-    visited_order: list[Position] = []  # Visit sequence
+    visited_order: list[Position] = []  # Visit sequence 
     frontier_max = 1  # Max queue size
 
     heappush(frontier, (0, next(unique), start))  # Add start node
 
-    while frontier:  # Explore nodes in loop
-        frontier_max = max(frontier_max, len(frontier))  # Update max size
-        _, _, current = heappop(frontier)  # Get highest priority node
-
-        if current in visited:  # Skip processed nodes
+    while frontier:  
+        frontier_max = max(frontier_max, len(frontier))  # Update max size, to record memory usage
+        _, _, current = heappop(frontier)  
+        if current in visited: 
             continue
 
-        visited.add(current)  # Mark as visited
-        visited_order.append(current)  # Save order
+        visited.add(current)  
+        visited_order.append(current)  
 
-        if current == goal:  # Reach destination
+        if current == goal: 
             return _finish(algorithm, heuristic, grid, start, goal, came_from, visited_order, frontier_max, started_at)
-
-        for neighbor in neighbors(grid, current):  # Check all neighbors
-            step_cost = terrain_cost(grid, neighbor)  # Cost of current terrain
-            if step_cost is None:  # Skip blocked cells
+        #Start iterating over the neighbors. Skip if a neighbor is an obstacle.
+        for neighbor in neighbors(grid, current):  
+            step_cost = terrain_cost(grid, neighbor)  
+            if step_cost is None: 
                 continue
 
-            new_cost = cost_so_far[current] + step_cost  # New travel cost
-            if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:  # Found better path
-                cost_so_far[neighbor] = new_cost  # Update cost
-                came_from[neighbor] = current  # Record path
-                h_value = heuristic_distance(heuristic, neighbor, goal)  # Heuristic value
+            new_cost = cost_so_far[current] + step_cost  
+            #There are two cases to update the node. First, the node has never been visited.
+            Second, the new path has a lower cost than the recorded one.
+            if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:  
+                cost_so_far[neighbor] = new_cost  
+                came_from[neighbor] = current  
+                h_value = heuristic_distance(heuristic, neighbor, goal)  
 
                 if algorithm == "Dijkstra":
                     priority = new_cost  # Priority = travel cost
