@@ -223,13 +223,13 @@ def breadth_first_search(grid: Grid, start: Position, goal: Position, heuristic:
                 started_at,
                 "BFS ignores terrain weights",
             )
-
-        for neighbor in neighbors(grid, current):
-            if neighbor in visited:
-                continue
-            visited.add(neighbor)
-            came_from[neighbor] = current
-            frontier.append(neighbor)
+        else:
+            for neighbor in neighbors(grid, current):
+                if neighbor in visited:
+                    continue
+                visited.add(neighbor)
+                came_from[neighbor] = current
+                frontier.append(neighbor)
 
     return _finish(
         "BFS",
